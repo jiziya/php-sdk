@@ -87,10 +87,17 @@ class Nanoyun{
                 $_headers = array('Expect:');
                 if(!is_null($filehandle)){
                     if(is_resource($filehandle)){
-                        // echo '是文件';
-                        fseek($filehandle, 0, SEEK_END);
-                        $length = ftell($filehandle);
-                        fseek($filehandle, 0);
+                        // echo '是文件';						
+                        //不能用于http://或ftp://打开的文件流
+                        @$re = fseek($filehandle, 0, SEEK_END);
+						if($re == 0) {
+							$length = ftell($filehandle);
+							fseek($filehandle, 0);
+						}else{
+							$meta = stream_get_meta_data($filehandle);
+							$_length = explode(':', $meta['wrapper_data'][8]);
+							$length = trim($_length[1]);
+						}
                         array_push($_headers, "Content-Length: {$length}");
                         curl_setopt($req_conn, CURLOPT_INFILE, $filehandle);
                         curl_setopt($req_conn, CURLOPT_INFILESIZE, $length);
